@@ -10,179 +10,158 @@
 
 <style>
 :root {
-  --bg: #f2f2f7;
-  --card: #ffffff;
-  --blue: #0a84ff;
-  --text: #1c1c1e;
-  --secondary: #8e8e93;
+  --bg:#f2f2f7; --card:#fff; --blue:#0a84ff;
+  --text:#1c1c1e; --secondary:#8e8e93;
 }
-
 body {
-  margin: 0;
-  background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text";
-  color: var(--text);
+  margin:0; background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont;
+  color:var(--text);
 }
-
-.container {
-  max-width: 430px;
-  margin: auto;
-  padding: 16px;
-}
-
-h1 {
-  font-size: 34px;
-  font-weight: 700;
-  margin: 10px 0 20px;
-}
-
+.container { max-width:430px; margin:auto; padding:16px; }
+h1 { font-size:34px; margin-bottom:10px; }
 .card {
-  background: var(--card);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
+  background:var(--card); border-radius:16px;
+  padding:16px; margin-bottom:16px;
 }
-
-.big-number {
-  font-size: 48px;
-  font-weight: 700;
+.big { font-size:42px; font-weight:700; }
+.sub { color:var(--secondary); font-size:14px; }
+button, input, select {
+  width:100%; padding:12px; font-size:16px;
+  border-radius:12px; border:none; margin-top:8px;
 }
-
-.subtle {
-  color: var(--secondary);
-  font-size: 15px;
-}
-
-.progress-ring {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--blue) 0deg,
-    var(--blue) var(--deg),
-    #e5e5ea var(--deg)
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 20px auto;
-}
-
-.progress-inner {
-  width: 110px;
-  height: 110px;
-  background: var(--card);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: 600;
-}
-
-button {
-  width: 100%;
-  background: var(--blue);
-  color: white;
-  border: none;
-  border-radius: 14px;
-  padding: 14px;
-  font-size: 17px;
-  font-weight: 600;
-  margin-top: 10px;
-}
-
-.quick-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.quick-buttons button {
-  flex: 1;
-  background: #e5f0ff;
-  color: var(--blue);
-}
-
-input {
-  width: 100%;
-  border: none;
-  font-size: 17px;
-  padding: 12px;
-  background: #f2f2f7;
-  border-radius: 12px;
-  margin-top: 8px;
-}
+button { background:var(--blue); color:white; font-weight:600; }
+.row { display:flex; gap:8px; }
+.row > * { flex:1; }
+.history { font-size:14px; }
+.toggle { background:#e5f0ff; color:var(--blue); }
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h1>Hydration</h1>
+<h1>Hydration</h1>
 
-  <div class="card">
-    <div class="subtle">Today</div>
-    <div class="big-number" id="total">0 oz</div>
+<div class="card">
+  <div class="sub">Today</div>
+  <div class="big" id="total">0 oz</div>
+  <div class="sub" id="goalText">Goal: 0 oz</div>
+</div>
 
-    <div class="progress-ring" id="ring" style="--deg:0deg">
-      <div class="progress-inner" id="percent">0%</div>
-    </div>
+<div class="card">
+  <div class="sub">Add Liquid</div>
+  <input id="name" placeholder="e.g. Water, Coffee">
+  <input id="amount" type="number" placeholder="Amount">
+  <button onclick="addEntry()">Add</button>
+</div>
 
-    <div class="subtle" id="goalText">Goal: 0 oz</div>
-  </div>
+<div class="card">
+  <div class="sub">Units</div>
+  <button class="toggle" onclick="toggleUnit()">Toggle oz / mL</button>
+</div>
 
-  <div class="card">
-    <div class="subtle">Quick Add</div>
-    <div class="quick-buttons">
-      <button onclick="add(8)">+8 oz</button>
-      <button onclick="add(12)">+12 oz</button>
-      <button onclick="add(16)">+16 oz</button>
-    </div>
-  </div>
+<div class="card">
+  <div class="sub">Weekly History</div>
+  <div class="history" id="history"></div>
+</div>
 
-  <div class="card">
-    <div class="subtle">Daily Goal</div>
-    <input type="number" id="goalInput" placeholder="e.g. 64">
-    <button onclick="saveGoal()">Save Goal</button>
-  </div>
+<div class="card">
+  <div class="sub">Daily Goal</div>
+  <input id="goalInput" type="number" placeholder="e.g. 64">
+  <button onclick="saveGoal()">Save Goal</button>
+</div>
+
+<div class="card">
+  <div class="sub">Reminders</div>
+  <button onclick="calendarReminder()">Add Calendar Reminder</button>
+</div>
+
+<div class="card">
+  <div class="sub">Export</div>
+  <button onclick="exportNotes()">Export to Notes</button>
+</div>
 </div>
 
 <script>
-const todayKey = () => new Date().toISOString().split("T")[0];
+const today = () => new Date().toISOString().split("T")[0];
 
-function init() {
-  if (localStorage.getItem("date") !== todayKey()) {
-    localStorage.setItem("date", todayKey());
-    localStorage.setItem("total", "0");
-  }
+function getData() {
+  return JSON.parse(localStorage.getItem("data")||"{}");
+}
+function saveData(d) {
+  localStorage.setItem("data", JSON.stringify(d));
+}
+
+function addEntry() {
+  const d = getData();
+  const day = today();
+  if (!d[day]) d[day]=[];
+  d[day].push({
+    name: name.value||"Liquid",
+    amt: Number(amount.value),
+    unit: localStorage.unit||"oz"
+  });
+  saveData(d);
+  amount.value="";
   update();
 }
 
-function add(amount) {
-  let total = Number(localStorage.getItem("total") || 0);
-  total += amount;
-  localStorage.setItem("total", total);
+function totalFor(day) {
+  const d=getData()[day]||[];
+  return d.reduce((s,e)=>s+convert(e.amt,e.unit),0);
+}
+
+function convert(val,unit) {
+  return unit==="ml"? val/29.5735 : val;
+}
+
+function toggleUnit() {
+  localStorage.unit = localStorage.unit==="ml"?"oz":"ml";
   update();
 }
 
 function saveGoal() {
-  localStorage.setItem("goal", document.getElementById("goalInput").value);
+  localStorage.goal = goalInput.value;
   update();
 }
 
 function update() {
-  const total = Number(localStorage.getItem("total") || 0);
-  const goal = Number(localStorage.getItem("goal") || 0);
-  const percent = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
-  const deg = percent * 3.6;
-
-  document.getElementById("total").innerText = total + " oz";
-  document.getElementById("goalText").innerText = "Goal: " + goal + " oz";
-  document.getElementById("percent").innerText = percent + "%";
-  document.getElementById("ring").style.setProperty("--deg", deg + "deg");
-  document.getElementById("goalInput").value = goal || "";
+  const t = totalFor(today());
+  const unit = localStorage.unit||"oz";
+  const display = unit==="ml"? Math.round(t*29.5735):Math.round(t);
+  total.innerText = display+" "+unit;
+  goalText.innerText = "Goal: "+(localStorage.goal||0)+" "+unit;
+  renderHistory();
 }
 
-init();
+function renderHistory() {
+  let out="";
+  for(let i=6;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().split("T")[0];
+    out+=k+": "+Math.round(totalFor(k))+" oz<br>";
+  }
+  history.innerHTML=out;
+}
+
+function calendarReminder() {
+  alert("Tip: Add a daily reminder using the iOS Calendar for best reliability.");
+}
+
+function exportNotes() {
+  let text="Hydration Log\n\n";
+  const d=getData();
+  for(const day in d){
+    text+=day+"\n";
+    d[day].forEach(e=>{
+      text+=`• ${e.name}: ${e.amt} ${e.unit}\n`;
+    });
+    text+="\n";
+  }
+  navigator.share({ text });
+}
+
+update();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
