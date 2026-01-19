@@ -11,6 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --blue: #0a84ff;
+  --text: #1c1c1e;
+  --secondary: #8e8e93;
+}
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f2f2f7;
@@ -35,6 +43,49 @@
       font-size: 14px;
       color: #555;
     }
+.subtle {
+  color: var(--secondary);
+  font-size: 15px;
+}
+
+.progress-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--blue) 0deg,
+    var(--blue) var(--deg),
+    #e5e5ea var(--deg)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+}
+
+.progress-inner {
+  width: 110px;
+  height: 110px;
+  background: var(--card);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+button {
+  width: 100%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 10px;
+}
     input, select, button {
       width: 100%;
       padding: 12px;
@@ -75,9 +126,26 @@
 
 <body>
 
-<h1>💧 Liquid Tracker - V.2</h1>
+<h1>💧 Liquid Tracker</h1>
 
 <div class="card">
+  <div class="card">
+    <div class="subtle">Today</div>
+    <div class="big-number" id="total">0 oz</div>
+
+    <div class="progress-ring" id="ring" style="--deg:0deg">
+      <div class="progress-inner" id="percent">0%</div>
+    </div>
+
+    <div class="subtle" id="goalText">Goal: 0 oz</div>
+  </div>
+  <div class="card">
+    <div class="subtle">Daily Goal</div>
+    <input type="number" id="goalInput" placeholder="e.g. 64">
+    <button onclick="saveGoal()">Save Goal</button>
+  </div>
+
+
   <div class="progress" id="progressText">0 / 64 oz</div>
 
   <label>Drink Name</label>
@@ -113,7 +181,33 @@
 <script>
 const GOAL_OZ = 64;
 const STORAGE_KEY = "liquid-tracker-data";
+const todayKey = () => new Date().toISOString().split("T")[0];
 
+function init() {
+  if (localStorage.getItem("date") !== todayKey()) {
+    localStorage.setItem("date", todayKey());
+    localStorage.setItem("total", "0");
+  }
+  update();
+}
+
+function saveGoal() {
+  localStorage.setItem("goal", document.getElementById("goalInput").value);
+  update();
+}
+
+function update() {
+  const total = Number(localStorage.getItem("total") || 0);
+  const goal = Number(localStorage.getItem("goal") || 0);
+  const percent = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
+  const deg = percent * 3.6;
+
+  document.getElementById("total").innerText = total + " oz";
+  document.getElementById("goalText").innerText = "Goal: " + goal + " oz";
+  document.getElementById("percent").innerText = percent + "%";
+  document.getElementById("ring").style.setProperty("--deg", deg + "deg");
+  document.getElementById("goalInput").value = goal || "";
+}
 function loadData() {
   return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 }
