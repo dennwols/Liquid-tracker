@@ -47,30 +47,24 @@ button {
   color: black;
 }
 
-.progress-ring {
-  width: 140px;
-  height: 140px;
-  margin: 0 auto 10px;
-}
-
 .progress-text {
   text-align: center;
   font-size: 20px;
   font-weight: 600;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
+.toggle {
+  display: flex;
+  gap: 8px;
 }
-li {
-  border-bottom: 1px solid #eee;
-  padding: 6px 0;
+.toggle button {
+  flex: 1;
 }
-.small {
-  font-size: 13px;
-  color: #666;
+.toggle button.active {
+  background: #007aff;
+  color: white;
 }
+
 canvas {
   width: 100%;
   height: 160px;
@@ -83,17 +77,26 @@ canvas {
 <h1>💧 Liquid Tracker</h1>
 
 <div class="card">
-  <canvas id="ring" class="progress-ring"></canvas>
+  <h2>Units</h2>
+  <div class="toggle">
+    <button id="ozBtn" onclick="setUnit('oz')">oz</button>
+    <button id="mlBtn" onclick="setUnit('ml')">ml</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Daily Goal</h2>
+  <input id="goalInput" type="number" min="1" oninput="updateGoal()">
+</div>
+
+<div class="card">
+  <canvas id="ring" width="140" height="140"></canvas>
   <div class="progress-text" id="progressText"></div>
 </div>
 
 <div class="card">
-  <input id="drinkName" placeholder="Drink name (Water, Coffee)">
+  <input id="drinkName" placeholder="Drink name">
   <input id="amount" type="number" placeholder="Amount">
-  <select id="unit">
-    <option value="oz">oz</option>
-    <option value="ml">ml</option>
-  </select>
   <button onclick="addDrink()">Add Drink</button>
 </div>
 
@@ -108,17 +111,17 @@ canvas {
 </div>
 
 <div class="card">
+  <button class="secondary" onclick="enableReminder()">Enable Reminder</button>
   <button class="secondary" onclick="exportData()">Export to Notes</button>
 </div>
 
 <script>
 const STORAGE_KEY = "liquidTrackerState";
 
-/* ---------------- STATE ---------------- */
-
 function defaultState() {
   return {
     goalOz: 64,
+    unit: "oz",
     drinks: []
   };
 }
@@ -131,77 +134,91 @@ function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-/* ---------------- UTIL ---------------- */
-
-function toOz(amount, unit) {
-  return unit === "ml" ? amount * 0.033814 : amount;
+function toOz(value, unit) {
+  return unit === "ml" ? value * 0.033814 : value;
 }
 
-function todayString() {
-  return new Date().toDateString();
+function fromOz(value, unit) {
+  return unit === "ml" ? value / 0.033814 : value;
 }
 
-/* ---------------- CORE LOGIC ---------------- */
+function setUnit(unit) {
+  const state = loadState();
+  state.unit = unit;
+  saveState(state);
+  render();
+}
+
+function updateGoal() {
+  const state = loadState();
+  const input = Number(document.getElementById("goalInput").value);
+  if (input > 0) {
+    state.goalOz = toOz(input, state.unit);
+    saveState(state);
+    render();
+  }
+}
 
 function addDrink() {
   const name = document.getElementById("drinkName").value || "Drink";
   const amount = Number(document.getElementById("amount").value);
-  const unit = document.getElementById("unit").value;
   if (!amount) return;
 
   const state = loadState();
   state.drinks.push({
     name,
-    amount,
-    unit,
+    amountOz: toOz(amount, state.unit),
     time: Date.now()
   });
 
   saveState(state);
   document.getElementById("drinkName").value = "";
   document.getElementById("amount").value = "";
-
   render();
 }
 
-/* ---------------- RENDER ---------------- */
-
 function render() {
   const state = loadState();
-  const today = todayString();
+  const unit = state.unit;
+  const today = new Date().toDateString();
 
-  let todayTotal = 0;
-  const todayList = document.getElementById("todayList");
-  todayList.innerHTML = "";
+  document.getElementById("ozBtn").classList.toggle("active", unit === "oz");
+  document.getElementById("mlBtn").classList.toggle("active", unit === "ml");
+
+  document.getElementById("goalInput").value =
+    Math.round(fromOz(state.goalOz, unit));
+
+  let totalOz = 0;
+  const list = document.getElementById("todayList");
+  list.innerHTML = "";
 
   state.drinks.forEach(d => {
     if (new Date(d.time).toDateString() === today) {
-      todayTotal += toOz(d.amount, d.unit);
+      totalOz += d.amountOz;
       const li = document.createElement("li");
-      li.textContent = `${d.name} — ${d.amount} ${d.unit}`;
-      todayList.appendChild(li);
+      li.textContent =
+        `${d.name} — ${Math.round(fromOz(d.amountOz, unit))} ${unit}`;
+      list.appendChild(li);
     }
   });
 
-  drawRing(todayTotal, state.goalOz);
-  document.getElementById("progressText").textContent =
-    `${Math.round(todayTotal)} / ${state.goalOz} oz`;
+  const displayTotal = Math.round(fromOz(totalOz, unit));
+  const displayGoal = Math.round(fromOz(state.goalOz, unit));
 
-  drawChart(state.drinks);
+  document.getElementById("progressText").textContent =
+    `${displayTotal} / ${displayGoal} ${unit}`;
+
+  drawRing(totalOz, state.goalOz);
+  drawChart(state.drinks, unit);
 }
 
-/* ---------------- RING ---------------- */
-
 function drawRing(value, goal) {
-  const canvas = document.getElementById("ring");
-  const ctx = canvas.getContext("2d");
-  canvas.width = canvas.height = 140;
-
-  const percent = Math.min(value / goal, 1);
-  const center = 70;
-  const radius = 60;
-
+  const c = document.getElementById("ring");
+  const ctx = c.getContext("2d");
   ctx.clearRect(0,0,140,140);
+
+  const pct = Math.min(value / goal, 1);
+  const center = 70, radius = 60;
 
   ctx.lineWidth = 12;
   ctx.strokeStyle = "#e5e5ea";
@@ -211,25 +228,17 @@ function drawRing(value, goal) {
 
   ctx.strokeStyle = "#007aff";
   ctx.beginPath();
-  ctx.arc(
-    center,
-    center,
-    radius,
-    -Math.PI / 2,
-    -Math.PI / 2 + percent * Math.PI * 2
-  );
+  ctx.arc(center, center, radius, -Math.PI/2, -Math.PI/2 + pct * Math.PI*2);
   ctx.stroke();
-}
 
-/* ---------------- HEALTH-STYLE CHART ---------------- */
+  if (pct >= 1 && navigator.vibrate) navigator.vibrate(50);
+}
 
 function drawChart(drinks) {
   const canvas = document.getElementById("chart");
   const ctx = canvas.getContext("2d");
   canvas.width = canvas.offsetWidth;
   canvas.height = 160;
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const days = [...Array(7)].map((_,i)=>{
     const d = new Date();
@@ -238,38 +247,34 @@ function drawChart(drinks) {
   });
 
   const totals = days.map(day =>
-    drinks
-      .filter(d => new Date(d.time).toDateString() === day)
-      .reduce((sum,d)=> sum + toOz(d.amount,d.unit), 0)
+    drinks.filter(d => new Date(d.time).toDateString() === day)
+          .reduce((s,d)=>s+d.amountOz,0)
   );
 
-  const max = Math.max(...totals, 64);
-  const barWidth = canvas.width / 7;
+  const max = Math.max(...totals, loadState().goalOz);
+  const bw = canvas.width / 7;
 
-  totals.forEach((val,i)=>{
-    const h = (val / max) * 120;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  totals.forEach((v,i)=>{
+    const h = (v / max) * 120;
     ctx.fillStyle = "#007aff";
-    ctx.fillRect(
-      i * barWidth + barWidth * 0.25,
-      140 - h,
-      barWidth * 0.5,
-      h
-    );
+    ctx.fillRect(i*bw + bw*0.25, 140-h, bw*0.5, h);
   });
 }
 
-/* ---------------- EXPORT ---------------- */
-
 function exportData() {
-  const state = loadState();
-  let text = "Liquid Intake Log\n\n";
-
-  state.drinks.forEach(d => {
-    text += `${new Date(d.time).toLocaleString()} — ${d.name}: ${d.amount} ${d.unit}\n`;
+  const s = loadState();
+  let t = "Liquid Intake Log\n\n";
+  s.drinks.forEach(d=>{
+    t += `${new Date(d.time).toLocaleString()} — ${d.name}: ${Math.round(fromOz(d.amountOz,s.unit))} ${s.unit}\n`;
   });
+  navigator.clipboard.writeText(t);
+  alert("Copied to clipboard");
+}
 
-  navigator.clipboard.writeText(text);
-  alert("Copied — paste into Apple Notes");
+function enableReminder() {
+  Notification.requestPermission();
 }
 
 render();
