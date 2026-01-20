@@ -113,6 +113,9 @@ canvas {
 <div class="card">
   <button class="secondary" onclick="enableReminder()">Enable Reminder</button>
   <button class="secondary" onclick="exportData()">Export to Notes</button>
+<button class="secondary" onclick="logToHealth()">
+  Log Today to Apple Health
+</button>
 </div>
 
 <script>
@@ -272,7 +275,28 @@ function exportData() {
   navigator.clipboard.writeText(t);
   alert("Copied to clipboard");
 }
+function logToHealth() {
+  const state = loadState();
+  const today = new Date().toDateString();
 
+  const totalOz = state.drinks
+    .filter(d => new Date(d.time).toDateString() === today)
+    .reduce((s, d) => s + d.amountOz, 0);
+
+  const ml = Math.round(totalOz / 0.033814);
+
+  const text = `WATER_ML:${ml}`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: "Log Water to Health",
+      text
+    });
+  } else {
+    navigator.clipboard.writeText(text);
+    alert("Copied for Health logging");
+  }
+}
 function enableReminder() {
   Notification.requestPermission();
 }
