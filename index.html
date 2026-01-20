@@ -1,311 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Liquid Tracker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Liquid Tracker</title>
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
 
-  <style>
-:root {
-  --bg: #f2f2f7;
-  --card: #ffffff;
-  --blue: #0a84ff;
-  --text: #1c1c1e;
-  --secondary: #8e8e93;
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f2f2f7;
+  margin: 0;
+  padding: 16px;
+}
+h1 { font-size: 28px; margin-bottom: 12px; }
+h2 { font-size: 18px; margin-bottom: 8px; }
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f2f2f7;
-      margin: 0;
-      padding: 16px;
-      color: #000;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 12px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: #555;
-    }
-.subtle {
-  color: var(--secondary);
-  font-size: 15px;
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #007aff;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.secondary {
+  background: #e5e5ea;
+  color: black;
 }
 
 .progress-ring {
   width: 140px;
   height: 140px;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--blue) 0deg,
-    var(--blue) var(--deg),
-    #e5e5ea var(--deg)
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 20px auto;
+  margin: 0 auto 10px;
 }
 
-.progress-inner {
-  width: 110px;
-  height: 110px;
-  background: var(--card);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
+.progress-text {
+  text-align: center;
+  font-size: 20px;
   font-weight: 600;
 }
 
-button {
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  border-bottom: 1px solid #eee;
+  padding: 6px 0;
+}
+.small {
+  font-size: 13px;
+  color: #666;
+}
+canvas {
   width: 100%;
-  background: var(--blue);
-  color: white;
-  border: none;
-  border-radius: 14px;
-  padding: 14px;
-  font-size: 17px;
-  font-weight: 600;
-  margin-top: 10px;
+  height: 160px;
 }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #007aff;
-      color: #fff;
-      border: none;
-      font-weight: 600;
-    }
-    button.secondary {
-      background: #e5e5ea;
-      color: #000;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .progress {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    .small {
-      font-size: 13px;
-      color: #666;
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-<h1>💧 Liquid Tracker-v02</h1>
+<h1>💧 Liquid Tracker</h1>
 
 <div class="card">
-  <div class="card">
-    <div class="subtle">Today</div>
-    <div class="big-number" id="total">0 oz</div>
+  <canvas id="ring" class="progress-ring"></canvas>
+  <div class="progress-text" id="progressText"></div>
+</div>
 
-    <div class="progress-ring" id="ring" style="--deg:0deg">
-      <div class="progress-inner" id="percent">0%</div>
-    </div>
-
-    <div class="subtle" id="goalText">Goal: 0 oz</div>
-  </div>
-  <div class="card">
-    <div class="subtle">Daily Goal</div>
-    <input type="number" id="goalInput" placeholder="e.g. 64">
-    <button onclick="saveGoal()">Save Goal</button>
-  </div>
-
-
-  <div class="progress" id="progressText">0 / 64 oz</div>
-
-  <label>Drink Name</label>
-  <input id="drinkName" placeholder="Water, Coffee, Juice">
-
-  <label>Amount</label>
+<div class="card">
+  <input id="drinkName" placeholder="Drink name (Water, Coffee)">
   <input id="amount" type="number" placeholder="Amount">
-
-  <label>Unit</label>
   <select id="unit">
     <option value="oz">oz</option>
     <option value="ml">ml</option>
   </select>
-
   <button onclick="addDrink()">Add Drink</button>
 </div>
 
 <div class="card">
-  <h3>Today</h3>
-  <ul id="drinkList"></ul>
+  <h2>Today</h2>
+  <ul id="todayList"></ul>
 </div>
 
 <div class="card">
-  <h3>Weekly History</h3>
-  <ul id="weeklyList"></ul>
+  <h2>7-Day Intake</h2>
+  <canvas id="chart"></canvas>
 </div>
 
 <div class="card">
   <button class="secondary" onclick="exportData()">Export to Notes</button>
-  <button class="secondary" onclick="enableReminder()">Enable Daily Reminder</button>
 </div>
 
 <script>
-const GOAL_OZ = 64;
-const STORAGE_KEY = "liquid-tracker-data";
-const todayKey = () => new Date().toISOString().split("T")[0];
+const STORAGE_KEY = "liquidTrackerState";
 
-function init() {
-  if (localStorage.getItem("date") !== todayKey()) {
-    localStorage.setItem("date", todayKey());
-    localStorage.setItem("total", "0");
-  }
-  update();
+/* ---------------- STATE ---------------- */
+
+function defaultState() {
+  return {
+    goalOz: 64,
+    drinks: []
+  };
 }
 
-function saveGoal() {
-  localStorage.setItem("goal", document.getElementById("goalInput").value);
-  update();
+function loadState() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState();
 }
 
-function update() {
-  const total = Number(localStorage.getItem("total") || 0);
-  const goal = Number(localStorage.getItem("goal") || 0);
-  const percent = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
-  const deg = percent * 3.6;
-
-  document.getElementById("total").innerText = total + " oz";
-  document.getElementById("goalText").innerText = "Goal: " + goal + " oz";
-  document.getElementById("percent").innerText = percent + "%";
-  document.getElementById("ring").style.setProperty("--deg", deg + "deg");
-  document.getElementById("goalInput").value = goal || "";
-}
-function loadData() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+/* ---------------- UTIL ---------------- */
+
+function toOz(amount, unit) {
+  return unit === "ml" ? amount * 0.033814 : amount;
 }
+
+function todayString() {
+  return new Date().toDateString();
+}
+
+/* ---------------- CORE LOGIC ---------------- */
 
 function addDrink() {
-  const name = document.getElementById("drinkName").value || "Unknown";
-  const amount = parseFloat(document.getElementById("amount").value);
+  const name = document.getElementById("drinkName").value || "Drink";
+  const amount = Number(document.getElementById("amount").value);
   const unit = document.getElementById("unit").value;
-
   if (!amount) return;
 
-  const entry = {
+  const state = loadState();
+  state.drinks.push({
     name,
     amount,
     unit,
-    timestamp: Date.now()
-  };
+    time: Date.now()
+  });
 
-  const data = loadData();
-  data.push(entry);
-  saveData(data);
-
+  saveState(state);
   document.getElementById("drinkName").value = "";
   document.getElementById("amount").value = "";
 
   render();
 }
 
-function toOunces(entry) {
-  return entry.unit === "ml"
-    ? entry.amount * 0.033814
-    : entry.amount;
-}
+/* ---------------- RENDER ---------------- */
 
 function render() {
-  const data = loadData();
-  const today = new Date().toDateString();
+  const state = loadState();
+  const today = todayString();
 
   let todayTotal = 0;
-  const list = document.getElementById("drinkList");
-  list.innerHTML = "";
+  const todayList = document.getElementById("todayList");
+  todayList.innerHTML = "";
 
-  data.forEach(e => {
-    const date = new Date(e.timestamp).toDateString();
-    if (date === today) {
-      todayTotal += toOunces(e);
+  state.drinks.forEach(d => {
+    if (new Date(d.time).toDateString() === today) {
+      todayTotal += toOz(d.amount, d.unit);
       const li = document.createElement("li");
-      li.textContent = `${e.name} – ${e.amount} ${e.unit}`;
-      list.appendChild(li);
+      li.textContent = `${d.name} — ${d.amount} ${d.unit}`;
+      todayList.appendChild(li);
     }
   });
 
+  drawRing(todayTotal, state.goalOz);
   document.getElementById("progressText").textContent =
-    `${Math.round(todayTotal)} / ${GOAL_OZ} oz`;
+    `${Math.round(todayTotal)} / ${state.goalOz} oz`;
 
-  renderWeekly(data);
+  drawChart(state.drinks);
 }
 
-function renderWeekly(data) {
-  const weekly = {};
-  data.forEach(e => {
-    const d = new Date(e.timestamp).toDateString();
-    weekly[d] = (weekly[d] || 0) + toOunces(e);
+/* ---------------- RING ---------------- */
+
+function drawRing(value, goal) {
+  const canvas = document.getElementById("ring");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.height = 140;
+
+  const percent = Math.min(value / goal, 1);
+  const center = 70;
+  const radius = 60;
+
+  ctx.clearRect(0,0,140,140);
+
+  ctx.lineWidth = 12;
+  ctx.strokeStyle = "#e5e5ea";
+  ctx.beginPath();
+  ctx.arc(center, center, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#007aff";
+  ctx.beginPath();
+  ctx.arc(
+    center,
+    center,
+    radius,
+    -Math.PI / 2,
+    -Math.PI / 2 + percent * Math.PI * 2
+  );
+  ctx.stroke();
+}
+
+/* ---------------- HEALTH-STYLE CHART ---------------- */
+
+function drawChart(drinks) {
+  const canvas = document.getElementById("chart");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 160;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const days = [...Array(7)].map((_,i)=>{
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return d.toDateString();
   });
 
-  const list = document.getElementById("weeklyList");
-  list.innerHTML = "";
+  const totals = days.map(day =>
+    drinks
+      .filter(d => new Date(d.time).toDateString() === day)
+      .reduce((sum,d)=> sum + toOz(d.amount,d.unit), 0)
+  );
 
-  Object.entries(weekly).slice(-7).forEach(([day, total]) => {
-    const li = document.createElement("li");
-    li.textContent = `${day}: ${Math.round(total)} oz`;
-    list.appendChild(li);
+  const max = Math.max(...totals, 64);
+  const barWidth = canvas.width / 7;
+
+  totals.forEach((val,i)=>{
+    const h = (val / max) * 120;
+    ctx.fillStyle = "#007aff";
+    ctx.fillRect(
+      i * barWidth + barWidth * 0.25,
+      140 - h,
+      barWidth * 0.5,
+      h
+    );
   });
 }
+
+/* ---------------- EXPORT ---------------- */
 
 function exportData() {
-  const data = loadData();
+  const state = loadState();
   let text = "Liquid Intake Log\n\n";
 
-  data.forEach(e => {
-    const date = new Date(e.timestamp).toLocaleString();
-    text += `${date} – ${e.name}: ${e.amount} ${e.unit}\n`;
+  state.drinks.forEach(d => {
+    text += `${new Date(d.time).toLocaleString()} — ${d.name}: ${d.amount} ${d.unit}\n`;
   });
 
   navigator.clipboard.writeText(text);
-  alert("Copied to clipboard. Paste into Apple Notes.");
-}
-
-function enableReminder() {
-  Notification.requestPermission().then(p => {
-    if (p === "granted") {
-      alert("Daily reminders enabled (when app is open).");
-    }
-  });
+  alert("Copied — paste into Apple Notes");
 }
 
 render();
