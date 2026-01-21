@@ -74,7 +74,7 @@ canvas {
 
 <body>
 
-<h1>💧 Liquid Tracker</h1>
+<h1>💧 Liquid Tracker - V1.0</h1>
 
 <div class="card">
   <h2>Units</h2>
@@ -280,9 +280,9 @@ function logToHealth() {
   const today = new Date().toDateString();
 
   const totalOz = state.drinks
-    alert("totalOz"+totalOz);
     .filter(d => new Date(d.time).toDateString() === today)
     .reduce((s, d) => s + d.amountOz, 0);
+    alert("totalOz"+totalOz);
 
   const ml = Math.round(totalOz / 0.033814);
 
