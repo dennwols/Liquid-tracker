@@ -280,13 +280,14 @@ function logToHealth() {
   const today = new Date().toDateString();
 
   const totalOz = state.drinks
+    alert("totalOz"+totalOz);
     .filter(d => new Date(d.time).toDateString() === today)
     .reduce((s, d) => s + d.amountOz, 0);
 
   const ml = Math.round(totalOz / 0.033814);
 
   const text = `WATER_ML:${ml}`;
-
+alert(text);
   if (navigator.share) {
     navigator.share({
       title: "Log Water to Health",
