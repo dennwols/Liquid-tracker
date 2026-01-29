@@ -272,6 +272,7 @@ function exportData() {
   s.drinks.forEach(d=>{
     t += `${new Date(d.time).toLocaleString()} — ${d.name}: ${Math.round(fromOz(d.amountOz,s.unit))} ${s.unit}\n`;
   });
+  alert(t);
   navigator.clipboard.writeText(t);
   alert("Copied to clipboard");
 }
